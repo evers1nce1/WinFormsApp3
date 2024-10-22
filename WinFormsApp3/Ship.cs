@@ -18,12 +18,15 @@ namespace WinFormsApp3
     {
         private ShipPoint _location;
         private int _size;
-        private ShipDirection _rotation; //left, right, back, forward
+        private ShipDirection _rotation;
+        private int _hits;
+
         public Ship(ShipPoint location, int size, ShipDirection rotation)
         {
             _location = location;
             _size = size;
             _rotation = rotation;
+            _hits = 0;
         }
         public void SetRotation(ShipDirection rotation)
         {
@@ -45,6 +48,16 @@ namespace WinFormsApp3
         {
             return _size;
         }
+        public void Hit()
+        {
+            _hits++;
+        }
+
+        public bool IsSunk()
+        {
+            return _hits >= _size;
+        }
+
     }
 
 }

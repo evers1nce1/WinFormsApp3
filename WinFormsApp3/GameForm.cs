@@ -13,19 +13,12 @@ namespace WinFormsApp3
 {
     public partial class GameForm : Form
     {
-
         private GameManager _gameManager;
-        Button[,] _placedButtons;
-
-        private string _username;
-        public GameForm(string name, Button[,] placedButtons)
+         
+        public GameForm(Player player, Computer computer)
         {
-            _username = name;
-            _placedButtons = placedButtons;
             InitializeComponent();
-            _gameManager = new GameManager(_username);
+            _gameManager = new GameManager(player, computer, _playerPanel, _computerPanel, startGame_button);
         }
-
-
     }
 }

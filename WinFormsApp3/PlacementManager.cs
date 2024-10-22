@@ -8,7 +8,8 @@ namespace WinFormsApp3
 {
     public class PlacementManager
     {
-        private GameManager _gameManager;
+        private bool[,] _occupiedCells;
+        private Random _random;
         private int _shipCount1 = 4;
         private int _shipCount2 = 3;
         private int _shipCount3 = 2;
@@ -28,10 +29,10 @@ namespace WinFormsApp3
         private Label labelCount4;
         private Panel panel1;
         private Button playButton;
-
-        public PlacementManager(GameManager gameManager, string username, RadioButton radioButton1, RadioButton radioButton2, RadioButton radioButton3, RadioButton radioButton4, Label labelCount1, Label labelCount2, Label labelCount3, Label labelCount4, Panel panel1, Button playButton)
+        private Player _player;
+        private Computer _computer;
+        public PlacementManager(string username, RadioButton radioButton1, RadioButton radioButton2, RadioButton radioButton3, RadioButton radioButton4, Label labelCount1, Label labelCount2, Label labelCount3, Label labelCount4, Panel panel1, Button playButton)
         {
-            _gameManager = gameManager;
             _username = username;
             this.radioButton1 = radioButton1;
             this.radioButton2 = radioButton2;
@@ -42,8 +43,12 @@ namespace WinFormsApp3
             this.labelCount3 = labelCount3;
             this.labelCount4 = labelCount4;
             this.panel1 = panel1;
+            _computer = new Computer("Компьютер");
             this.playButton = playButton;
             _board = new Board();
+            _player = new Player(username);
+            _occupiedCells = new bool[10, 10];
+            _random = new Random();
         }
 
         public void InitializeForm(PlacementForm form)
@@ -59,11 +64,16 @@ namespace WinFormsApp3
 
         private void StartGame(object? sender, EventArgs e)
         {
-            GameForm gameForm = new GameForm(_username, _buttons);
+            PlaceComputerShips();
+            GameForm gameForm = new GameForm(_player, _computer);
             if (_shipCount1 + _shipCount2 + _shipCount3 + _shipCount4 == 0)
+            {
                 gameForm.ShowDialog();
+            }
             else
+            {
                 MessageBox.Show("Перед началом игры необходимо расставить все корабли.");
+            }
 
         }
 
@@ -177,7 +187,7 @@ namespace WinFormsApp3
                 _selectedShip.SetLocation(new ShipPoint(point.X, point.Y));
                 if (CanPlaceShip(_selectedShip))
                 {
-                    _gameManager.GetPlayer().AddShip(_selectedShip);
+
                     switch (_selectedShip.GetSize())
                     {
                         case 1:
@@ -200,6 +210,7 @@ namespace WinFormsApp3
 
                     PaintSurroundingCells(_selectedShip, Color.Gray);
                     // синий цвет - занятые кораблями
+                    AddShipCells(_selectedShip);
                     PaintShipCells(_selectedShip, Color.Blue);
 
                     // серый цвет - нельзя разместить корабль
@@ -230,6 +241,18 @@ namespace WinFormsApp3
                 _buttons[shipX, shipY].BackColor = color;
                 _previousButtonColors[new Point(shipX, shipY)] = color;
             }
+        }
+        private void AddShipCells(Ship ship)
+        {
+            List<ShipPoint> shipPoints = new List<ShipPoint>();
+            for (int i = 0; i < ship.GetSize(); i++)
+            {
+                int shipX = ship.GetLocation().GetX() + (i * (ship.GetRotation() == ShipDirection.Right ? 1 : 0));
+                int shipY = ship.GetLocation().GetY() + (i * (ship.GetRotation() == ShipDirection.Down ? 1 : 0));
+                ShipPoint shipPoint = new ShipPoint(shipX, shipY);
+                shipPoints.Add(shipPoint);
+            }
+            _player.AddShip(ship, shipPoints);
         }
 
         private void PaintSurroundingCells(Ship ship, Color color)
@@ -358,6 +381,95 @@ namespace WinFormsApp3
 
             return true;
         }
+        public void PlaceComputerShips()
+        {
+            PlaceShipForComputer(4, 1);
+            PlaceShipForComputer(3, 2);
+            PlaceShipForComputer(2, 3);
+            PlaceShipForComputer(1, 4);
+        }
 
+        private void PlaceShipForComputer(int size, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                Dictionary<ShipPoint, ShipDirection> possiblePositions = CalculatePossiblePositions(size);
+                if (possiblePositions.Count > 0)
+                {
+                    int randomIndex = _random.Next(possiblePositions.Count);
+                    KeyValuePair<ShipPoint, ShipDirection> selectedPosition = possiblePositions.ElementAt(randomIndex);
+                    Ship ship = new Ship(selectedPosition.Key, size, selectedPosition.Value);
+                    PlaceComputerShipOnGrid(selectedPosition.Key, ship);
+                }
+                else
+                {
+                    Console.WriteLine($"Не удалось разместить корабль размера {size}");
+                }
+            }
+        }
+
+        private Dictionary<ShipPoint, ShipDirection> CalculatePossiblePositions(int size)
+        {
+            Dictionary<ShipPoint, ShipDirection> possiblePositions = new Dictionary<ShipPoint, ShipDirection>();
+
+            for (int x = 0; x < 10; x++)
+            {
+                for (int y = 0; y < 10; y++)
+                {
+                    if (CanPlaceHorizontally(x, y, size))
+                    {
+                        possiblePositions.Add(new ShipPoint(x, y), ShipDirection.Right);
+                    }
+                    else if (CanPlaceVertically(x, y, size))
+                    {
+                        possiblePositions.Add(new ShipPoint(x, y), ShipDirection.Down);
+                    }
+                }
+            }
+
+            return possiblePositions;
+        }
+
+        private bool CanPlaceHorizontally(int x, int y, int size)
+        {
+            if (x + size > 10) return false;
+
+            for (int i = Math.Max(0, x - 1); i <= Math.Min(9, x + size); i++)
+            {
+                for (int j = Math.Max(0, y - 1); j <= Math.Min(9, y + 1); j++)
+                {
+                    if (_occupiedCells[i, j]) return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool CanPlaceVertically(int x, int y, int size)
+        {
+            if (y + size > 10) return false;
+
+            for (int i = Math.Max(0, x - 1); i <= Math.Min(9, x + 1); i++)
+            {
+                for (int j = Math.Max(0, y - 1); j <= Math.Min(9, y + size); j++)
+                {
+                    if (_occupiedCells[i, j]) return false;
+                }
+            }
+            return true;
+        }
+            private void PlaceComputerShipOnGrid(ShipPoint location, Ship ship)
+        {
+            List< ShipPoint > points = new List<ShipPoint> ();
+            for (int i = 0; i < ship.GetSize(); i++)
+            {
+                int x = ship.GetRotation() == ShipDirection.Right ? location.GetX() + i : location.GetX();
+                int y = ship.GetRotation() == ShipDirection.Down ? location.GetY() + i : location.GetY();
+                points.Add(new ShipPoint(x, y));
+                _occupiedCells[x, y] = true;
+            }
+
+            _computer.AddShip(ship, points);
+        }
     }
 }

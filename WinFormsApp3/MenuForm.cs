@@ -13,7 +13,6 @@ namespace WinFormsApp3
 {
     public partial class MenuForm : Form
     {
-        private GameManager _gameManager;
         private string _username;
 
         public MenuForm(string username)
@@ -24,8 +23,7 @@ namespace WinFormsApp3
 
         private void startGame_button_Click(object sender, EventArgs e)
         {
-            GameManager _gameManager = new GameManager(_username);
-            PlacementForm shipPlacementForm = new PlacementForm(_gameManager, _username);
+            PlacementForm shipPlacementForm = new PlacementForm(_username);
             shipPlacementForm.ShowDialog();
             this.Hide();
 
