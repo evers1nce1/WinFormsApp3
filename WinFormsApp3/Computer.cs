@@ -46,23 +46,6 @@ namespace WinFormsApp3
             return shot;
         }
 
-        public void RegisterShotResult(ShipPoint shot, bool isHit)
-        {
-            if (isHit)
-            {
-                _hits.Add(shot);
-                _lastHit = shot;
-            }
-        }
-
-        public void RegisterShipSunk(List<ShipPoint> shipPoints)
-        {
-            foreach (var point in shipPoints)
-            {
-                _hits.Remove(point);
-            }
-            _lastHit = null;
-        }
 
         private ShipPoint PredictNextShot()
         {

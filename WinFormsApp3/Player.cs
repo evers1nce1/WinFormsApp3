@@ -7,20 +7,22 @@ namespace WinFormsApp3
     public class Player
     {
         private string _name;
-        private List<(Ship Ship, List<ShipPoint> Points)> _ships;
+        private List<ShipPoint> _hitPoints;
+        private List<Ship> _ships;
 
         public Player(string name)
         {
             _name = name;
-            _ships = new List<(Ship Ship, List<ShipPoint> Points)>();
+            _ships = new List<Ship>();
+            _hitPoints = new List<ShipPoint>();
         }
 
         public void AddShip(Ship ship, List<ShipPoint> Points)
         {
-            _ships.Add((ship, Points));
+            _ships.Add(ship);
         }
 
-        public List<(Ship Ship, List<ShipPoint> Points)> GetShips()
+        public List<Ship> GetShips()
         {
             return _ships;
         }
@@ -29,12 +31,32 @@ namespace WinFormsApp3
         {
             return _name;
         }
-
-    public bool HasShipAt(int x, int y)
-    {
-        foreach (var (_, buttons) in _ships)
+        public bool IsSunk(ShipPoint point)
         {
-            if (buttons.Any(b =>  
+            Ship ship = FindShipAt(point);
+            if (ship != null)
+                return ship.IsSunk();
+            return false;
+        }
+
+
+        public void RegisterHit(ShipPoint point)
+        {
+            Ship ship = FindShipAt(point);
+            if (ship != null)
+            {
+                MessageBox.Show(ship.GetLocation().GetX().ToString());
+                ship.Hit();
+            }
+            else
+                MessageBox.Show("-");
+        }
+
+        public bool HasShipAt(int x, int y)
+    {
+        foreach (Ship ship in _ships)
+        {
+            if (ship.GetAllPoints().Any(b =>  
                 b.GetX() == x && 
                 b.GetY() == y))
             {
@@ -43,19 +65,17 @@ namespace WinFormsApp3
         }
         return false;
     }
-
-        public (Ship Ship, ShipPoint Point)? GetShipAt(int x, int y)
+        public Ship FindShipAt(ShipPoint Point)
         {
-            foreach (var (ship, points) in _ships)
+            foreach (Ship ship in _ships)
             {
-                var point = points.FirstOrDefault(b =>
+                List<ShipPoint> points = ship.GetAllPoints();
+                foreach (ShipPoint point in points)
                 {
-                    return b.GetX() == x && b.GetY() == y;
-                });
-
-                if (point != null)
-                {
-                    return (ship, point);
+                    if (point.GetX() == Point.GetX() && point.GetY() == Point.GetY())
+                    {
+                        return ship;
+                    }
                 }
             }
             return null;

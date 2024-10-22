@@ -52,6 +52,24 @@ namespace WinFormsApp3
         {
             _hits++;
         }
+        public List<ShipPoint> GetAllPoints()
+        {
+            List<ShipPoint> points = new List<ShipPoint>();
+
+            for (int i = 0; i < _size; i++)
+            {
+                if (_rotation == ShipDirection.Right)
+                {
+                    points.Add(new ShipPoint(_location.GetX() + i, _location.GetY()));
+                }
+                else // ShipDirection.Down
+                {
+                    points.Add(new ShipPoint(_location.GetX(), _location.GetY() + i));
+                }
+            }
+
+            return points;
+        }
 
         public bool IsSunk()
         {
