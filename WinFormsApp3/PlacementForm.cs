@@ -17,7 +17,7 @@ namespace WinFormsApp3
         public PlacementForm(string username)
         {
             InitializeComponent();
-            _placementManager = new PlacementManager( username, radioButton1, radioButton2, radioButton3, radioButton4, label_count1, labelcount_2, labelcount_3, labelcount_4, panel1, playButton);
+            _placementManager = new PlacementManager(this, username, radioButton1, radioButton2, radioButton3, radioButton4, label_count1, labelcount_2, labelcount_3, labelcount_4, panel1, playButton);
             _placementManager.InitializeForm(this);
         }
     }

@@ -21,6 +21,7 @@ namespace WinFormsApp3
         private List<Button> _playerField = new List<Button>();
         private List<Button> _computerField = new List<Button>();
         private ShipPoint _lastHit;
+        private bool _isGameEnd;
 
         public GameManager(Player player, Computer computer, Panel playerPanel, Panel computerPanel, Button gameStartButton)
         {
@@ -30,6 +31,7 @@ namespace WinFormsApp3
             _computerPanel = computerPanel;
             _gameStartButton = gameStartButton;
             _isPlayerTurn = false;
+            _isGameEnd = false;
             _random = new Random();
             InitializeGame();
         }
@@ -82,12 +84,14 @@ namespace WinFormsApp3
                         Location = new Point(x * buttonSize, y * buttonSize),
                         Tag = new Point(x, y)
                     };
+                    /*
                     if (_computer.HasShipAt(x, y))
                     {
                         button.BackColor = Color.Blue;
                     }
+                    */
                     _computerField.Add(button);
-                    button.Click += ComputerButton_Click;
+                    button.Click += PlayerTurn;
                     _computerPanel.Controls.Add(button);
                 }
             }
@@ -97,19 +101,17 @@ namespace WinFormsApp3
         {
             _gameStartButton.Enabled = false;
             _isPlayerTurn = true;
-            // Здесь можно добавить дополнительную логику начала игры
         }
 
         public Move ComputerMove()
         {
             ShipPoint point = _computer.MakeShot();
             bool isHit = _player.HasShipAt(point.GetX(), point.GetY());
-            bool isSunk = _player.IsSunk(point);
-            Move move = new Move(point, isHit, isSunk);
+            Move move = new Move(point, isHit, false);
             return move;
         }
 
-        private void ComputerButton_Click(object sender, EventArgs e)
+        private void PlayerTurn(object sender, EventArgs e)
         {
             if (!_isPlayerTurn) return;
 
@@ -118,18 +120,15 @@ namespace WinFormsApp3
             bool isHit = _computer.HasShipAt(location.GetX(), location.GetY());
             Ship currentShip = _computer.FindShipAt(location);
             bool isSunk = _computer.IsSunk(location);
-            if (isSunk)
-                MessageBox.Show("1");
             Move move = new Move(location, isHit, isSunk);
-            if (isHit)
+            if (_computer.HasShipAt(location.GetX(), location.GetY()))
             {
                 // Попадание
-                _player.RegisterHit(location);
+                _computer.RegisterHit(location);
                 clickedButton.BackColor = Color.Red;
                 if (currentShip.IsSunk())
                 {
-                    MessageBox.Show("1");
-                    OnShipSunk(currentShip);
+                    OnShipSunk(currentShip, _computer, _computerField);
                 }
                 CheckGameEnd();
             }
@@ -137,41 +136,65 @@ namespace WinFormsApp3
             {
                 // Промах
                 clickedButton.BackColor = Color.Gray;
+                //clickedButton.Enabled = false;
                 _isPlayerTurn = false;
                 ComputerTurn();
             }
+
         }
-        public void OnShipSunk(Ship ship)
+        public void OnShipSunk(Ship ship, Player player, List<Button> field)
         {
+            player.AddSunk();
             // Получаем все точки корабля
             List<ShipPoint> shipPoints = ship.GetAllPoints();
 
-            // Помечаем все клетки корабля крестиком
+            // Отмечаем окружающие клетки
+            PrintSurroundingCells(shipPoints, field);
+
+            // Отмечаем точки самого корабля
             foreach (ShipPoint point in shipPoints)
             {
-                // Находим соответствующую кнопку
-                Button button = _computerField.First(b => ((Point)b.Tag).X == point.GetX() && ((Point)b.Tag).Y == point.GetY());
+                Button shipButton = field.First(b =>
+                    ((Point)b.Tag).X == point.GetX() &&
+                    ((Point)b.Tag).Y == point.GetY());
 
-                // Меняем текст кнопки на "X"
-                button.Text = "X";
-
-                // Можно также изменить цвет для визуального выделения
-                button.BackColor = Color.Red;
+                shipButton.Text = "X";
+                shipButton.BackColor = Color.Red;
             }
-
         }
         private void ComputerTurn()
         {
-            if (_isPlayerTurn) return;
-            Move computerMove = ComputerMove();
+            if (_isPlayerTurn || _isGameEnd) 
+                return;
             
-            var buttonData = _playerField.FirstOrDefault(s => ((Point)s.Tag).X == computerMove.GetPoint().GetX() && ((Point)s.Tag).Y == computerMove.GetPoint().GetY());
-            if (computerMove.IsHit())
+            ShipPoint shot = _computer.MakeShot();
+            Ship currentShip = _player.FindShipAt(shot);
+            bool isHit = _player.HasShipAt(shot.GetX(), shot.GetY());
+            bool isSunk = false;
+            _computer.UpdateLastShot(shot, isHit);
+            var buttonData = _playerField.FirstOrDefault(
+                s => ((Point)s.Tag).X == shot.GetX() &&
+                ((Point)s.Tag).Y == shot.GetY());
+
+            if (isHit)
             {
-                // Попадание
-                _computer.RegisterHit(computerMove.GetPoint());
+                _player.RegisterHit(shot);
+                isSunk = _player.IsSunk(shot);
+                if (isSunk)
+                {
+                    _computer.OnShipSunk(currentShip);
+                    OnShipSunk(currentShip, _player, _playerField);
+
+                } 
                 buttonData.BackColor = Color.Red;
-                ComputerTurn();
+                if (!isSunk)
+                {
+                    ComputerTurn(); // Компьютер ходит снова
+                }
+                else
+                {
+                    _isPlayerTurn = true;
+                }
                 CheckGameEnd();
             }
             else
@@ -181,24 +204,68 @@ namespace WinFormsApp3
                 _isPlayerTurn = true;
             }
         }
+        private void PrintSurroundingCells(List<ShipPoint> shipPoints, List<Button> field)
+        {
+            foreach (ShipPoint point in shipPoints)
+            {
+                // Проходим по окружающим клеткам (включая диагональные)
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        int newX = point.GetX() + dx;
+                        int newY = point.GetY() + dy;
 
+                        // Проверяем, что точка находится в пределах поля
+                        if (newX >= 0 && newX < 10 && newY >= 0 && newY < 10)
+                        {
+                            // Находим соответствующую кнопку
+                            Button surroundingButton = field.First(b =>
+                                ((Point)b.Tag).X == newX &&
+                                ((Point)b.Tag).Y == newY);
+                            surroundingButton.Enabled = false;
+                            // Если это не точка самого корабля, красим в серый
+                            if (!shipPoints.Any(p => p.GetX() == newX && p.GetY() == newY))
+                            {
+                                surroundingButton.BackColor = Color.Gray;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void OnGameEnd()
+        {
+           foreach (Button button in _computerField)
+            {
+                button.Enabled = false;
+            }
+        }
         private void CheckGameEnd()
         {
             if (CheckWinner() == 1)
-                MessageBox.Show("Игрок победил");
-            else if(CheckWinner() == 0)
-                MessageBox.Show("Компьютер победил");
+            {
+                MessageBox.Show("Игрок победил.");
+                OnGameEnd();
+            }
+            else if (CheckWinner() == 0)
+            {
+                MessageBox.Show("Компьютер победил.");
+                OnGameEnd();
+            }
         }
         private int CheckWinner()
         {
             // Проверка конца игры
             // Если у одного из игроков не осталось кораблей, то игра окончена
-            if (_player.GetShips().Count == 0)
+            if (_player.GetSunkCount() == 10)
             {
+                _isGameEnd = true;
                 return 0;
             }
-            else if (_computer.GetShips().Count() == 0)
+            else if (_computer.GetSunkCount() == 10)
             {
+                _isGameEnd = true;
                 return 1;
             }
             return -1;

@@ -67,7 +67,6 @@ namespace WinFormsApp3
                     points.Add(new ShipPoint(_location.GetX(), _location.GetY() + i));
                 }
             }
-
             return points;
         }
 

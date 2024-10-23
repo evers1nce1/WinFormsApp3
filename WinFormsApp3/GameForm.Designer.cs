@@ -36,22 +36,22 @@
             // _playerPanel
             // 
             _playerPanel.BorderStyle = BorderStyle.FixedSingle;
-            _playerPanel.Location = new Point(43, 42);
+            _playerPanel.Location = new Point(36, 42);
             _playerPanel.Name = "_playerPanel";
-            _playerPanel.Size = new Size(301, 214);
+            _playerPanel.Size = new Size(300, 300);
             _playerPanel.TabIndex = 0;
             // 
             // _computerPanel
             // 
             _computerPanel.BorderStyle = BorderStyle.FixedSingle;
-            _computerPanel.Location = new Point(428, 42);
+            _computerPanel.Location = new Point(437, 42);
             _computerPanel.Name = "_computerPanel";
-            _computerPanel.Size = new Size(301, 214);
+            _computerPanel.Size = new Size(300, 300);
             _computerPanel.TabIndex = 1;
             // 
             // startGame_button
             // 
-            startGame_button.Location = new Point(50, 290);
+            startGame_button.Location = new Point(36, 370);
             startGame_button.Name = "startGame_button";
             startGame_button.Size = new Size(98, 50);
             startGame_button.TabIndex = 2;
@@ -62,7 +62,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(776, 440);
             Controls.Add(startGame_button);
             Controls.Add(_computerPanel);
             Controls.Add(_playerPanel);

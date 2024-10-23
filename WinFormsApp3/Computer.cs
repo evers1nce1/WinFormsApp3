@@ -10,13 +10,14 @@ namespace WinFormsApp3
     public class Computer : Player
     {
         private Random _random = new Random();
-        private List<ShipPoint> _availableShots = new List<ShipPoint>();
-        private List<ShipPoint> _hits = new List<ShipPoint>();
+        private List<ShipPoint> _availableShots;
         private ShipPoint _lastHit;
+        private bool _hasLastHit;
 
         public Computer(string name) : base(name)
         {
-            // Инициализация доступных выстрелов
+            _availableShots = new List<ShipPoint>();
+            // Заполняем список доступных выстрелов всеми точками поля
             for (int x = 0; x < 10; x++)
             {
                 for (int y = 0; y < 10; y++)
@@ -24,69 +25,103 @@ namespace WinFormsApp3
                     _availableShots.Add(new ShipPoint(x, y));
                 }
             }
+            _hasLastHit = false;
         }
 
         public ShipPoint MakeShot()
         {
             ShipPoint shot;
 
-            if (_hits.Count > 0)
+            if (_hasLastHit)
             {
-                // Если есть попадание, пытаемся угадать направление корабля
-                shot = PredictNextShot();
+                // Если было попадание, стреляем вокруг этой точки
+                shot = GetShotAroundPoint(_lastHit);
             }
             else
             {
-                // Если нет попаданий, выбираем случайную клетку
+                // Иначе случайный выстрел
                 int index = _random.Next(_availableShots.Count);
                 shot = _availableShots[index];
             }
 
-            _availableShots.Remove(shot);
+            // Удаляем использованную точку из доступных
+            _availableShots.RemoveAll(p =>
+                p.GetX() == shot.GetX() &&
+                p.GetY() == shot.GetY());
+
             return shot;
         }
 
-
-        private ShipPoint PredictNextShot()
+        private ShipPoint GetShotAroundPoint(ShipPoint point)
         {
-            List<ShipPoint> possibleShots = new List<ShipPoint>();
+            // Проверяем все соседние клетки
+            List<ShipPoint> possibleShots = new List<ShipPoint>
+        {
+            new ShipPoint(point.GetX() + 1, point.GetY()),
+            new ShipPoint(point.GetX() - 1, point.GetY()),
+            new ShipPoint(point.GetX(), point.GetY() + 1),
+            new ShipPoint(point.GetX(), point.GetY() - 1)
+        };
 
-            if (_hits.Count == 1)
-            {
-                // Проверяем все соседние клетки
-                AddPossibleShot(possibleShots, _lastHit.GetX() + 1, _lastHit.GetY());
-                AddPossibleShot(possibleShots, _lastHit.GetX() - 1, _lastHit.GetY());
-                AddPossibleShot(possibleShots, _lastHit.GetX(), _lastHit.GetY() + 1);
-                AddPossibleShot(possibleShots, _lastHit.GetX(), _lastHit.GetY() - 1);
-            }
-            else
-            {
-                // Если есть больше одного попадания, стреляем в том же направлении
-                int dx = _hits[1].GetX() - _hits[0].GetX();
-                int dy = _hits[1].GetY() - _hits[0].GetY();
+            // Фильтруем только доступные выстрелы
+            var validShots = possibleShots.Where(p =>
+                p.GetX() >= 0 && p.GetX() < 10 &&
+                p.GetY() >= 0 && p.GetY() < 10 &&
+                _availableShots.Any(a =>
+                    a.GetX() == p.GetX() &&
+                    a.GetY() == p.GetY())
+            ).ToList();
 
-                AddPossibleShot(possibleShots, _lastHit.GetX() + dx, _lastHit.GetY() + dy);
-                AddPossibleShot(possibleShots, _hits[0].GetX() - dx, _hits[0].GetY() - dy);
+            if (validShots.Count > 0)
+            {
+                // Выбираем случайную точку из доступных
+                return validShots[_random.Next(validShots.Count)];
             }
 
-            if (possibleShots.Count > 0)
-            {
-                return possibleShots[_random.Next(possibleShots.Count)];
-            }
-            else
-            {
-                // Если нет возможных выстрелов, выбираем случайную клетку
-                int index = _random.Next(_availableShots.Count);
-                return _availableShots[index];
-            }
+            // Если нет доступных точек вокруг, делаем случайный выстрел
+            int index = _random.Next(_availableShots.Count);
+            return _availableShots[index];
         }
 
-        private void AddPossibleShot(List<ShipPoint> possibleShots, int x, int y)
+        public void OnShipSunk(Ship ship)
         {
-            ShipPoint shot = new ShipPoint(x, y);
-            if (_availableShots.Contains(shot))
+            List<ShipPoint> pointsToRemove = new List<ShipPoint>();
+            List<ShipPoint> shipPoints = ship.GetAllPoints();
+
+            foreach (ShipPoint point in shipPoints)
             {
-                possibleShots.Add(shot);
+                // Добавляем окружающие клетки
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        int newX = point.GetX() + dx;
+                        int newY = point.GetY() + dy;
+
+                        if (newX >= 0 && newX < 10 && newY >= 0 && newY < 10)
+                        {
+                            pointsToRemove.Add(new ShipPoint(newX, newY));
+                        }
+                    }
+                }
+            }
+
+            // Удаляем все эти точки из доступных выстрелов
+            _availableShots.RemoveAll(shot =>
+                pointsToRemove.Any(p => p.GetX() == shot.GetX() && p.GetY() == shot.GetY()));
+        }
+
+        // Метод для обновления состояния после выстрела
+        public void UpdateLastShot(ShipPoint shot, bool isHit)
+        {
+            if (isHit)
+            {
+                _lastHit = shot;
+                _hasLastHit = true;
+            }
+            else
+            {
+                _hasLastHit = false;
             }
         }
     }
