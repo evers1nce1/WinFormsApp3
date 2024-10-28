@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,9 @@ namespace WinFormsApp3
     {
         private Player _player;
         private Computer _computer;
+        private LeaderboardManager _leaderboard;
+        private int _moveCount;
+        private Stopwatch _gameTimer;
         private bool _isPlayerTurn;
         private Panel _playerPanel;
         private Panel _computerPanel;
@@ -33,6 +37,9 @@ namespace WinFormsApp3
             _isPlayerTurn = false;
             _isGameEnd = false;
             _random = new Random();
+            _leaderboard = new LeaderboardManager();
+            _gameTimer = new Stopwatch();
+            _moveCount = 0;
             InitializeGame();
         }
 
@@ -101,6 +108,7 @@ namespace WinFormsApp3
         {
             _gameStartButton.Enabled = false;
             _isPlayerTurn = true;
+            _gameTimer.Restart();
         }
 
         public Move ComputerMove()
@@ -116,6 +124,7 @@ namespace WinFormsApp3
             if (!_isPlayerTurn) return;
 
             Button clickedButton = (Button)sender;
+            _moveCount++;
             ShipPoint location = new ShipPoint(((Point)clickedButton.Tag).X, ((Point)clickedButton.Tag).Y);
             bool isHit = _computer.HasShipAt(location.GetX(), location.GetY());
             Ship currentShip = _computer.FindShipAt(location);
@@ -236,21 +245,28 @@ namespace WinFormsApp3
         }
         private void OnGameEnd()
         {
-           foreach (Button button in _computerField)
+            foreach (Button button in _computerField)
             {
                 button.Enabled = false;
             }
         }
         private void CheckGameEnd()
         {
-            if (CheckWinner() == 1)
+            int winner = CheckWinner();
+            if (winner == 1)
             {
-                MessageBox.Show("Игрок победил.");
+                _gameTimer.Stop();
+                var record = new GameRecord(_player.GetName());
+                record.SetMoves(_moveCount);
+                record.SetDuration(_gameTimer.Elapsed);
+                _leaderboard.AddRecord(record);
+                MessageBox.Show($"Игрок победил!\nХодов: {_moveCount}\nВремя: {_gameTimer.Elapsed.TotalSeconds:F1} сек.");
                 OnGameEnd();
             }
-            else if (CheckWinner() == 0)
+            else if (winner == 0)
             {
-                MessageBox.Show("Компьютер победил.");
+                _gameTimer.Stop();
+                MessageBox.Show("Компьютер победил!");
                 OnGameEnd();
             }
         }

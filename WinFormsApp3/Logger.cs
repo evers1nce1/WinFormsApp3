@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WinFormsApp3
 {
-    internal class Logger
+    public class Logger
     {
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace WinFormsApp3
 {
-    partial class Leadership
+    partial class LeaderboardForm
     {
         /// <summary>
         /// Required designer variable.

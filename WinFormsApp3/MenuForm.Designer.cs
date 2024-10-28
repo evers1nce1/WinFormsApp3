@@ -63,6 +63,7 @@
             leadership_Button.TabIndex = 2;
             leadership_Button.Text = "Таблица лидеров";
             leadership_Button.UseVisualStyleBackColor = true;
+            leadership_Button.Click += leadership_Button_Click;
             // 
             // button1
             // 
