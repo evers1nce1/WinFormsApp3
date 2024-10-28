@@ -13,7 +13,6 @@ namespace WinFormsApp3
     public partial class LeaderboardForm : Form
     {
         private LeaderboardManager _leaderboard;
-        private ListView _leaderboardListView;
 
         public LeaderboardForm()
         {
@@ -24,20 +23,12 @@ namespace WinFormsApp3
 
         private void InitializeLeaderboardView()
         {
-            _leaderboardListView = new ListView
-            {
-                View = View.Details,
-                Dock = DockStyle.Fill,
-                FullRowSelect = true,
-                GridLines = true
-            };
 
-            _leaderboardListView.Columns.Add("Игрок", 150);
-            _leaderboardListView.Columns.Add("Ходов", 100);
-            _leaderboardListView.Columns.Add("Время", 100);
-            _leaderboardListView.Columns.Add("Дата", 150);
+            listView_leaderboard.Columns.Add("Игрок", 150);
+            listView_leaderboard.Columns.Add("Ходов", 100);
+            listView_leaderboard.Columns.Add("Время", 100);
+            listView_leaderboard.Columns.Add("Дата", 150);
 
-            Controls.Add(_leaderboardListView);
         }
 
         private void LoadLeaderboard()
@@ -48,15 +39,16 @@ namespace WinFormsApp3
 
         private void DisplayLeaderboard()
         {
-            _leaderboardListView.Items.Clear();
+            listView_leaderboard.Items.Clear();
             foreach (var record in _leaderboard.GetRecords())
             {
                 var item = new ListViewItem(record.GetPlayerName());
                 item.SubItems.Add(record.GetMoves().ToString());
                 item.SubItems.Add(record.GetFormattedTime());
                 item.SubItems.Add(record.GetGameDate().ToString("dd.MM.yyyy HH:mm"));
-                _leaderboardListView.Items.Add(item);
+                listView_leaderboard.Items.Add(item);
             }
         }
+
     }
 }

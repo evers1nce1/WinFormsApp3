@@ -28,18 +28,34 @@
         /// </summary>
         private void InitializeComponent()
         {
+            listView_leaderboard = new ListView();
             SuspendLayout();
             // 
-            // Leadership
+            // listView_leaderboard
+            // 
+            listView_leaderboard.Dock = DockStyle.Fill;
+            listView_leaderboard.FullRowSelect = true;
+            listView_leaderboard.GridLines = true;
+            listView_leaderboard.Location = new Point(0, 0);
+            listView_leaderboard.Name = "listView_leaderboard";
+            listView_leaderboard.Size = new Size(489, 320);
+            listView_leaderboard.TabIndex = 0;
+            listView_leaderboard.UseCompatibleStateImageBehavior = false;
+            listView_leaderboard.View = View.Details;
+            // 
+            // LeaderboardForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(417, 335);
-            Name = "Leadership";
+            ClientSize = new Size(489, 320);
+            Controls.Add(listView_leaderboard);
+            Name = "LeaderboardForm";
             Text = "Form1";
             ResumeLayout(false);
         }
 
         #endregion
+
+        private ListView listView_leaderboard;
     }
 }
