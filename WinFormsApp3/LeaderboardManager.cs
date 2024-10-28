@@ -22,7 +22,7 @@ namespace WinFormsApp3
         {
             _records.Add(record);
             _records = _records
-                .OrderBy(r => r.GetMoves())
+                .OrderBy(r => r.GetMovesList().Count)
                 .ThenBy(r => r.GetDuration())
                 .Take(10) 
                 .ToList();
@@ -35,7 +35,6 @@ namespace WinFormsApp3
                 var options = new JsonSerializerOptions
                 {
                     WriteIndented = true,
-                    IncludeFields = true
                 };
 
                 string jsonString = JsonSerializer.Serialize(_records, options);

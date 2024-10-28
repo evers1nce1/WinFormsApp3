@@ -31,7 +31,7 @@
             startGame_button = new Button();
             label1 = new Label();
             leadership_Button = new Button();
-            button1 = new Button();
+            replay_Button = new Button();
             SuspendLayout();
             // 
             // startGame_button
@@ -65,21 +65,22 @@
             leadership_Button.UseVisualStyleBackColor = true;
             leadership_Button.Click += leadership_Button_Click;
             // 
-            // button1
+            // replay_Button
             // 
-            button1.Location = new Point(333, 338);
-            button1.Name = "button1";
-            button1.Size = new Size(120, 100);
-            button1.TabIndex = 3;
-            button1.Text = "Таблица лидеров";
-            button1.UseVisualStyleBackColor = true;
+            replay_Button.Location = new Point(333, 338);
+            replay_Button.Name = "replay_Button";
+            replay_Button.Size = new Size(120, 100);
+            replay_Button.TabIndex = 3;
+            replay_Button.Text = "Просмотр игры";
+            replay_Button.UseVisualStyleBackColor = true;
+            replay_Button.Click += replay_Button_Click;
             // 
             // MenuForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
-            Controls.Add(button1);
+            Controls.Add(replay_Button);
             Controls.Add(leadership_Button);
             Controls.Add(label1);
             Controls.Add(startGame_button);
@@ -94,6 +95,6 @@
         private Button startGame_button;
         private Label label1;
         private Button leadership_Button;
-        private Button button1;
+        private Button replay_Button;
     }
 }

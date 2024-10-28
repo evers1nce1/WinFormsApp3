@@ -14,11 +14,12 @@ namespace WinFormsApp3
     public partial class MenuForm : Form
     {
         private string _username;
-
+        private Logger _logger;
         public MenuForm(string username)
         {
             InitializeComponent();
             _username = username;
+            _logger = new Logger();
         }
 
         private void startGame_button_Click(object sender, EventArgs e)
@@ -33,6 +34,26 @@ namespace WinFormsApp3
         {
             LeaderboardForm leaderboardForm = new LeaderboardForm();
             leaderboardForm.ShowDialog();
+        }
+
+        private void replay_Button_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                InitialDirectory = Path.Combine(Application.StartupPath, "saves"),
+            };
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = openFileDialog.FileName;
+                GameRecord gameRecord = _logger.LoadGameRecord(filePath);
+
+                if (gameRecord != null)
+                {
+                    GameReplayForm replayForm = new GameReplayForm(gameRecord);
+                    replayForm.Show();
+                }
+            }
         }
     }
 }

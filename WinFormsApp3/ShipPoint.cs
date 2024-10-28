@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace WinFormsApp3
 {
     public class ShipPoint
     {
+        [JsonInclude]
         private int _x;
+        [JsonInclude]
         private int _y;
+        [JsonConstructor]
+        public ShipPoint()
+        {
+        }
 
         public ShipPoint(int x, int y)
         {

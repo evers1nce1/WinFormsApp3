@@ -10,8 +10,8 @@ namespace WinFormsApp3
 {
     public class GameManager
     {
-        private Player _player;
-        private Computer _computer;
+        protected Player _player;
+        protected Computer _computer;
         private LeaderboardManager _leaderboard;
         private int _moveCount;
         private Stopwatch _gameTimer;
@@ -22,11 +22,11 @@ namespace WinFormsApp3
         private Random _random;
         private List<ShipPoint> _availableShots = new List<ShipPoint>();
         private List<ShipPoint> _hits = new List<ShipPoint>();
-        private List<Button> _playerField = new List<Button>();
-        private List<Button> _computerField = new List<Button>();
+        protected List<Button> _playerField = new List<Button>();
+        protected List<Button> _computerField = new List<Button>();
         private ShipPoint _lastHit;
         private bool _isGameEnd;
-
+        private Logger _logger;
         public GameManager(Player player, Computer computer, Panel playerPanel, Panel computerPanel, Button gameStartButton)
         {
             _player = player;
@@ -36,6 +36,7 @@ namespace WinFormsApp3
             _gameStartButton = gameStartButton;
             _isPlayerTurn = false;
             _isGameEnd = false;
+            _logger = new Logger();
             _random = new Random();
             _leaderboard = new LeaderboardManager();
             _gameTimer = new Stopwatch();
@@ -47,10 +48,11 @@ namespace WinFormsApp3
         {
             CreatePlayerGrid();
             CreateComputerGrid();
+            _logger.OnNewGame(_player.GetName());
             _gameStartButton.Click += StartGame;
         }
 
-        private void CreatePlayerGrid()
+        protected void CreatePlayerGrid()
         {
             _playerPanel.Controls.Clear();
             int buttonSize = Math.Min(_playerPanel.Width / 10, _playerPanel.Height / 10);
@@ -76,7 +78,7 @@ namespace WinFormsApp3
             }
         }
 
-        private void CreateComputerGrid()
+        protected void CreateComputerGrid()
         {
             _computerPanel.Controls.Clear();
             int buttonSize = Math.Min(_computerPanel.Width / 10, _computerPanel.Height / 10);
@@ -111,14 +113,6 @@ namespace WinFormsApp3
             _gameTimer.Restart();
         }
 
-        public Move ComputerMove()
-        {
-            ShipPoint point = _computer.MakeShot();
-            bool isHit = _player.HasShipAt(point.GetX(), point.GetY());
-            Move move = new Move(point, isHit, false);
-            return move;
-        }
-
         private void PlayerTurn(object sender, EventArgs e)
         {
             if (!_isPlayerTurn) return;
@@ -128,8 +122,7 @@ namespace WinFormsApp3
             ShipPoint location = new ShipPoint(((Point)clickedButton.Tag).X, ((Point)clickedButton.Tag).Y);
             bool isHit = _computer.HasShipAt(location.GetX(), location.GetY());
             Ship currentShip = _computer.FindShipAt(location);
-            bool isSunk = _computer.IsSunk(location);
-            Move move = new Move(location, isHit, isSunk);
+            Move move = new Move(location, isHit, false, true);
             if (_computer.HasShipAt(location.GetX(), location.GetY()))
             {
                 // Попадание
@@ -137,16 +130,19 @@ namespace WinFormsApp3
                 clickedButton.BackColor = Color.Red;
                 if (currentShip.IsSunk())
                 {
+                    move.SetShipSunk();
                     OnShipSunk(currentShip, _computer, _computerField);
                 }
+                _logger.LogMove(move);
                 CheckGameEnd();
             }
             else
             {
                 // Промах
                 clickedButton.BackColor = Color.Gray;
-                //clickedButton.Enabled = false;
+                clickedButton.Enabled = false;
                 _isPlayerTurn = false;
+                _logger.LogMove(move);
                 ComputerTurn();
             }
 
@@ -180,6 +176,7 @@ namespace WinFormsApp3
             Ship currentShip = _player.FindShipAt(shot);
             bool isHit = _player.HasShipAt(shot.GetX(), shot.GetY());
             bool isSunk = false;
+            Move move = new Move(shot, isHit, isSunk, false);
             _computer.UpdateLastShot(shot, isHit);
             var buttonData = _playerField.FirstOrDefault(
                 s => ((Point)s.Tag).X == shot.GetX() &&
@@ -191,11 +188,13 @@ namespace WinFormsApp3
                 isSunk = _player.IsSunk(shot);
                 if (isSunk)
                 {
+                    move.SetShipSunk();
                     _computer.OnShipSunk(currentShip);
                     OnShipSunk(currentShip, _player, _playerField);
 
                 } 
                 buttonData.BackColor = Color.Red;
+                _logger.LogMove(move);
                 if (!isSunk)
                 {
                     ComputerTurn(); // Компьютер ходит снова
@@ -252,13 +251,14 @@ namespace WinFormsApp3
         }
         private void CheckGameEnd()
         {
+            GameRecord record = _logger.GetGameRecord();
+            record.SetPlayerShips(_player.GetShips());
+            record.SetComputerShips(_computer.GetShips());
             int winner = CheckWinner();
             if (winner == 1)
             {
                 _gameTimer.Stop();
-                var record = new GameRecord(_player.GetName());
-                record.SetMoves(_moveCount);
-                record.SetDuration(_gameTimer.Elapsed);
+                _logger.EndGame(_gameTimer.Elapsed, true);
                 _leaderboard.AddRecord(record);
                 MessageBox.Show($"Игрок победил!\nХодов: {_moveCount}\nВремя: {_gameTimer.Elapsed.TotalSeconds:F1} сек.");
                 OnGameEnd();
@@ -266,14 +266,13 @@ namespace WinFormsApp3
             else if (winner == 0)
             {
                 _gameTimer.Stop();
+                _logger.EndGame(_gameTimer.Elapsed, false);
                 MessageBox.Show("Компьютер победил!");
                 OnGameEnd();
             }
         }
         private int CheckWinner()
         {
-            // Проверка конца игры
-            // Если у одного из игроков не осталось кораблей, то игра окончена
             if (_player.GetSunkCount() == 10)
             {
                 _isGameEnd = true;

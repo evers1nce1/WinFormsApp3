@@ -24,10 +24,10 @@ namespace WinFormsApp3
         private void InitializeLeaderboardView()
         {
 
-            listView_leaderboard.Columns.Add("Игрок", 150);
-            listView_leaderboard.Columns.Add("Ходов", 100);
-            listView_leaderboard.Columns.Add("Время", 100);
-            listView_leaderboard.Columns.Add("Дата", 150);
+            listView_leaderboard.Columns.Add("Игрок");
+            listView_leaderboard.Columns.Add("Ходов");
+            listView_leaderboard.Columns.Add("Время");
+            listView_leaderboard.Columns.Add("Дата");
 
         }
 
@@ -43,7 +43,7 @@ namespace WinFormsApp3
             foreach (var record in _leaderboard.GetRecords())
             {
                 var item = new ListViewItem(record.GetPlayerName());
-                item.SubItems.Add(record.GetMoves().ToString());
+                item.SubItems.Add(record.GetMovesList().Count.ToString());
                 item.SubItems.Add(record.GetFormattedTime());
                 item.SubItems.Add(record.GetGameDate().ToString("dd.MM.yyyy HH:mm"));
                 listView_leaderboard.Items.Add(item);

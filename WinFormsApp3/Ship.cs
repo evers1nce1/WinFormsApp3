@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 namespace WinFormsApp3
 {
     using System;
+    using System.Text.Json.Serialization;
+
     public enum ShipDirection
     {
         Up,
@@ -16,10 +18,20 @@ namespace WinFormsApp3
     }
     public class Ship
     {
+        [JsonInclude]
         private ShipPoint _location;
+        [JsonInclude]
         private int _size;
+        [JsonInclude]
         private ShipDirection _rotation;
+        [JsonInclude]
         private int _hits;
+
+        [JsonConstructor]
+
+        public Ship()
+        {
+        }
 
         public Ship(ShipPoint location, int size, ShipDirection rotation)
         {
