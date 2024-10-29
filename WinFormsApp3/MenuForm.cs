@@ -24,10 +24,9 @@ namespace WinFormsApp3
 
         private void startGame_button_Click(object sender, EventArgs e)
         {
-            PlacementForm shipPlacementForm = new PlacementForm(_username);
+            PlacementForm shipPlacementForm = new PlacementForm(_username, this);
             shipPlacementForm.Show();
             this.Hide();
-
         }
 
         private void leadership_Button_Click(object sender, EventArgs e)

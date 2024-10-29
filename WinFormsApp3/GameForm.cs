@@ -14,11 +14,18 @@ namespace WinFormsApp3
     public partial class GameForm : Form
     {
         private GameManager _gameManager;
-         
-        public GameForm(Player player, Computer computer)
+        private MenuForm _menuForm;
+        public GameForm(Player player, Computer computer, MenuForm menuForm)
         {
             InitializeComponent();
             _gameManager = new GameManager(player, computer, _playerPanel, _computerPanel, startGame_button);
+            _menuForm = menuForm;
+            this.FormClosed += OnFormClosed;
         }
+        private void OnFormClosed(object sender, FormClosedEventArgs e)
+        {
+            _menuForm.Show();
+        }
+
     }
 }

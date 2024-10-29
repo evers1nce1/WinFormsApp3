@@ -32,8 +32,10 @@ namespace WinFormsApp3
         private Player _player;
         private PlacementForm form;
         private Computer _computer;
-        public PlacementManager(PlacementForm form, string username, RadioButton radioButton1, RadioButton radioButton2, RadioButton radioButton3, RadioButton radioButton4, Label labelCount1, Label labelCount2, Label labelCount3, Label labelCount4, Panel panel1, Button playButton)
+        private MenuForm _menuForm;
+        public PlacementManager(MenuForm menuForm, PlacementForm form, string username, RadioButton radioButton1, RadioButton radioButton2, RadioButton radioButton3, RadioButton radioButton4, Label labelCount1, Label labelCount2, Label labelCount3, Label labelCount4, Panel panel1, Button playButton)
         {
+            _menuForm = menuForm;
             _username = username;
             this.radioButton1 = radioButton1;
             this.radioButton2 = radioButton2;
@@ -67,7 +69,7 @@ namespace WinFormsApp3
         private void StartGame(object? sender, EventArgs e)
         {
             PlaceComputerShips();
-            GameForm gameForm = new GameForm(_player, _computer);
+            GameForm gameForm = new GameForm(_player, _computer, _menuForm);
             if (_shipCount1 + _shipCount2 + _shipCount3 + _shipCount4 == 0)
             {
                 form.Hide();
