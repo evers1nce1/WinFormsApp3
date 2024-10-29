@@ -30,7 +30,10 @@ namespace WinFormsApp3
             _isSunk = isSunk;
             _isPlayerMove = isPlayerMove;
         }
-
+        public bool IsPlayerMove()
+        {
+            return _isPlayerMove;
+        }
         public ShipPoint GetPoint()
         {
             return _point;

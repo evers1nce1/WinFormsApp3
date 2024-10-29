@@ -207,8 +207,8 @@ namespace WinFormsApp3
             }
             else
             {
-                // Промах
                 buttonData.BackColor = Color.Gray;
+                _logger.LogMove(move);
                 _isPlayerTurn = true;
             }
         }

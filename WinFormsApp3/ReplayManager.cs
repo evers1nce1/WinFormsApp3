@@ -18,6 +18,7 @@ namespace WinFormsApp3
         private Button _prevMoveButton;
         private List<Button> _playerField;
         private List<Button> _computerField;
+        private List<Move> _moves;
 
         public ReplayManager(GameRecord gameRecord, Panel playerPanel, Panel computerPanel,
             Label moveCountLabel, Button nextMoveButton, Button prevMoveButton)
@@ -29,7 +30,7 @@ namespace WinFormsApp3
             _nextMoveButton = nextMoveButton;
             _prevMoveButton = prevMoveButton;
             _currentMoveIndex = -1;
-
+            _moves = gameRecord.GetMovesList();
             _playerField = new List<Button>();
             _computerField = new List<Button>();
 
@@ -40,8 +41,114 @@ namespace WinFormsApp3
         {
             CreatePlayerGrid();
             CreateComputerGrid();
-
+            _nextMoveButton.Click += (sender, e) => NextMove();
+            _prevMoveButton.Click += (sender, e) => PreviousMove();
             InitializeShips();
+            UpdateMoveCountLabel();
+        }
+        public void NextMove()
+        {
+            if (_currentMoveIndex < _moves.Count - 1)
+            {
+                _currentMoveIndex++;
+                ApplyMove(_moves[_currentMoveIndex]);
+                UpdateMoveCountLabel();
+            }
+        }
+
+        public void PreviousMove()
+        {
+            if (_currentMoveIndex > -1)
+            {
+                UndoMove(_moves[_currentMoveIndex]);
+                _currentMoveIndex--;
+                UpdateMoveCountLabel();
+            }
+        }
+        private void ApplyMove(Move move)
+        {
+            Button button = FindButtonByCoordinates(move.GetPoint().GetX(), move.GetPoint().GetY(),
+                move.IsPlayerMove() ? _computerField : _playerField);
+
+            if (move.IsHit())
+            {
+                button.BackColor = Color.Red;
+                if (move.IsSunk())
+                {
+                    // Отметьте потопленный корабль
+                    MarkSunkShip(move.GetPoint(), move.IsPlayerMove() ? _computerField : _playerField);
+                }
+            }
+            else
+            {
+                button.BackColor = Color.Gray;
+            }
+
+        }
+        private void UpdateMoveCountLabel()
+        {
+            _moveCountLabel.Text = $"Ход {_currentMoveIndex + 1} / {_moves.Count}";
+        }
+
+        private void UndoMove(Move move)
+        {
+            Button button = FindButtonByCoordinates(move.GetPoint().GetX(), move.GetPoint().GetY(),
+                move.IsPlayerMove() ? _computerField : _playerField);
+
+            if (!move.IsHit())
+            {
+                button.BackColor = Color.White;
+            }
+            else
+            {
+                if (move.IsSunk())
+                {
+                    UnmarkSunkShip(move.GetPoint(), move.IsPlayerMove() ? _computerField : _playerField);
+                }
+                else
+                {
+                    button.BackColor = Color.Blue;
+                }
+            }
+        }
+        private void MarkSunkShip(ShipPoint point, List<Button> field)
+        {
+            Ship sunkShip = FindShipByPoint(point, field == _playerField ? _gameRecord.GetPlayerShips() : _gameRecord.GetComputerShips());
+            if (sunkShip != null)
+            {
+                foreach (var shipPoint in sunkShip.GetAllPoints())
+                {
+                    Button button = FindButtonByCoordinates(shipPoint.GetX(), shipPoint.GetY(), field);
+                    button.Text = "X";
+                }
+            }
+        }
+        private void ResetAllButtons()
+        {
+            foreach (var button in _playerField.Concat(_computerField))
+            {
+                button.BackColor = Color.White;
+                button.Text = "";
+            }
+        }
+
+        private void UnmarkSunkShip(ShipPoint point, List<Button> field)
+        {
+            Ship sunkShip = FindShipByPoint(point, field == _playerField ? _gameRecord.GetPlayerShips() : _gameRecord.GetComputerShips());
+            FindButtonByCoordinates(point.GetX(), point.GetY(), field).BackColor = Color.Blue;
+            if (sunkShip != null)
+            {
+                foreach (var shipPoint in sunkShip.GetAllPoints())
+                {
+                    Button button = FindButtonByCoordinates(shipPoint.GetX(), shipPoint.GetY(), field);
+                    button.Text = "";
+                }
+            }
+        }
+
+        private Ship FindShipByPoint(ShipPoint point, List<Ship> ships)
+        {
+            return ships.FirstOrDefault(ship => ship.GetAllPoints().Any(p => p.GetX() == point.GetX() && p.GetY() == point.GetY()));
         }
 
         private void CreatePlayerGrid()
