@@ -42,13 +42,6 @@ namespace WinFormsApp3
             CreateComputerGrid();
 
             InitializeShips();
-
-
-            _nextMoveButton.Click += NextMove;
-            _prevMoveButton.Click += PreviousMove;
-
-            UpdateMoveCounter();
-            UpdateControlState();
         }
 
         private void CreatePlayerGrid()
@@ -97,13 +90,11 @@ namespace WinFormsApp3
 
         private void InitializeShips()
         {
-            // Инициализация кораблей игрока
             foreach (Ship ship in _gameRecord.GetPlayerShips())
             {
                 PlaceShipOnGrid(ship, _playerField);
             }
 
-            // Инициализация кораблей компьютера
             foreach (Ship ship in _gameRecord.GetComputerShips())
             {
                 PlaceShipOnGrid(ship, _computerField);
@@ -122,59 +113,6 @@ namespace WinFormsApp3
             }
         }
 
-        public void NextMove(object sender, EventArgs e)
-        {
-            if (_currentMoveIndex < _gameRecord.GetMovesList().Count - 1)
-            {
-                _currentMoveIndex++;
-                ShowMove(_gameRecord.GetMovesList()[_currentMoveIndex]);
-                UpdateControlState();
-                UpdateMoveCounter();
-            }
-        }
-
-        public void PreviousMove(object sender, EventArgs e)
-        {
-            if (_currentMoveIndex >= 0)
-            {
-                UndoMove(_gameRecord.GetMovesList()[_currentMoveIndex]);
-                _currentMoveIndex--;
-                UpdateControlState();
-                UpdateMoveCounter();
-            }
-        }
-
-        private void ShowMove(Move move)
-        {
-            List<Button> targetField = _currentMoveIndex % 2 == 0 ? _computerField : _playerField;
-
-            Button targetButton = FindButtonByCoordinates(move.GetPoint().GetX(), move.GetPoint().GetY(), targetField);
-
-            if (targetButton != null)
-            {
-                if (move.IsHit())
-                {
-                    targetButton.BackColor = Color.Red;
-                }
-                else
-                {
-                    targetButton.BackColor = Color.Yellow;
-                }
-            }
-        }
-
-        private void UndoMove(Move move)
-        {
-            List<Button> targetField = _currentMoveIndex % 2 == 0 ? _computerField : _playerField;
-
-            Button targetButton = FindButtonByCoordinates(move.GetPoint().GetX(), move.GetPoint().GetY(), targetField);
-
-            if (targetButton != null)
-            {
-                targetButton.BackColor = Color.White;
-            }
-        }
-
         private Button FindButtonByCoordinates(int x, int y, List<Button> field)
         {
             foreach (Button button in field)
@@ -187,16 +125,6 @@ namespace WinFormsApp3
             return null;
         }
 
-        private void UpdateMoveCounter()
-        {
-            _moveCountLabel.Text = $"Move {_currentMoveIndex + 1} of {_gameRecord.GetMovesList().Count}";
-        }
-
-        private void UpdateControlState()
-        {
-            _nextMoveButton.Enabled = _currentMoveIndex < _gameRecord.GetMovesList().Count - 1;
-            _prevMoveButton.Enabled = _currentMoveIndex >= 0;
-        }
 
     }
 }
